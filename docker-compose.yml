@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: ./kwork_scrapper
+    container_name: kwork_bot
+    working_dir: /app
+    volumes:
+      - ./kwork_scrapper:/app
+    command: ["/app/entrypoint.sh"]
+    environment:
+      - LOGIN=${KWORK_LOGIN}
+      - PASSWD=${KWORK_PASSWD}
+      - PHONE_LAST=${KWORK_PHONE_LAST}
+      - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWD}@mongo:27017/
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    command: ["--auth"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWD}
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_SERVER: mongo
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
