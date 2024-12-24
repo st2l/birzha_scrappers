@@ -14,7 +14,7 @@ load_dotenv()
 async def main():
 
     while True:
-
+        continue
         logger.info(
             f"Started kwork parser with: {os.environ.get('LOGIN')}, {os.environ.get('PASSWD')}, {os.environ.get('PHONE_LAST')}")
         api = Kwork(
