@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from aiohttp import web
 from loguru import logger
 import asyncio
+import handlers
 import os
 
 
@@ -14,12 +15,11 @@ USER_ID = int(os.getenv('TELEGRAM_USER_ID'))
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
+# import routers
+dp.include_router(handlers.start_router)
+
 
 async def main():
-    @dp.message(Command('start'))
-    async def send_welcome(message: types.Message):
-        await message.reply("Hi!\nI'm your bot!")
-
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
