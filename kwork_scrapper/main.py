@@ -1,5 +1,5 @@
 import aiohttp.connector
-from kwork import Kwork
+from kwork import Kwork, KworkBot, types
 import asyncio
 import json
 import os
@@ -15,29 +15,35 @@ import requests
 load_dotenv()
 
 
+async def get_configuration_from_mongo():
+    try:
+        client = MongoClient(os.environ.get('MONGO_URI'))
+        db = client['kwork_db']
+        collection = db['configurations']
+
+        config = collection.find_one({'name': 'kwork_settings'})
+        if not config:
+            # Create default configuration if it does not exist
+            default_config = {
+                'name': 'kwork_settings',
+                'search_on_market': True,
+                'automatic_answers': False,
+            }
+            collection.insert_one(default_config)
+            config = default_config
+
+        return config
+
+    except Exception as e:
+        logger.error(
+            f'Error while getting configuration from mongo db: {e}')
+
+
 async def main():
 
     while True:
         # -- checking configuration
-        try:
-            client = MongoClient(os.environ.get('MONGO_URI'))
-            db = client['kwork_db']
-            collection = db['configurations']
-
-            config = collection.find_one({'name': 'kwork_settings'})
-            if not config:
-                # Create default configuration if it does not exist
-                default_config = {
-                    'name': 'kwork_settings',
-                    'search_on_market': True,
-                    'automatic_answers': False,
-                }
-                collection.insert_one(default_config)
-                config = default_config
-
-        except Exception as e:
-            logger.error(
-                f'Error while getting configuration from mongo db: {e}')
+        config = await get_configuration_from_mongo()
 
         if config['search_on_market'] is False:
             logger.info(
@@ -75,6 +81,8 @@ async def main():
             collection = db['projects']
 
             for project in projs_contain_telegram_n_bot:
+                if collection.find_one({'id': project['id']}):
+                    continue
                 collection.update_one({'id': project['id']}, {
                                       '$set': project}, upsert=True)
         except Exception as e:
@@ -112,6 +120,36 @@ async def main():
         await asyncio.sleep(70)
 
 
+async def run_bot():
+    bot = KworkBot(
+        login=os.environ.get('LOGIN'),
+        password=os.environ.get('PASSWD'),
+        phone_last=os.environ.get('PHONE_LAST')
+    )
+
+    @bot.message_handler(on_start=True)
+    async def message_recieved(message: types.Message):
+        try:
+
+            config = await get_configuration_from_mongo()
+            if config['automatic_answers'] is False:
+                url = 'http://aiogram_bot:64783/event'
+                data = {'service': 'kwork_message', 'message': message}
+                requests.post(url, json=data)
+            else:
+                # TODO: write automatic answers
+                return
+
+        except Exception as e:
+            logger.error(f'Error while sending message: {e}')
+
+    await bot.run_bot()
+
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+
+    loop.create_task(main())
+    loop.create_task(run_bot())
+
+    loop.run_forever()

@@ -4,6 +4,7 @@ from aiohttp import web
 from loguru import logger
 import asyncio
 import handlers
+import events
 import os
 
 
@@ -28,15 +29,9 @@ async def handle_event(request):  # function to handle incoming events
     data = await request.json()
     
     if data['service'] == 'kwork':
-        logger.info(f'Recieved new project from Kwork: {data["project"]}')
-
-        message = f"""Новый проект на бирже Kwork:
-Названние: **{data['project']['title']}**
-Описание: {data['project']['description']}
-Ссылка: [ссылка]({data['project']['project_url']})
-Стоимость: {data['project'].get('price_from', 'некорректно указан параметр')} рублей - {data['project'].get('price_to', 'некорректно указан параметр')} рублей"""
-        
-        await bot.send_message(chat_id=USER_ID, text=message, parse_mode='Markdown')
+        await events.kwork_event_handler(bot, data, USER_ID)
+    elif data['service'] == 'kwork_message':
+        await events.kwork_message_event_handler(bot, data, USER_ID)
 
     return web.Response(text="Event received", status=200)
 
