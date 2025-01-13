@@ -21,13 +21,18 @@ dp.include_router(handlers.handler_router)
 
 
 async def main():
-    await dp.start_polling(bot)
+    try:
+        logger.info(
+            f'Starting polling with auth token -> {API_TOKEN} and user -> {USER_ID}')
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.error(f'Error in main() aiogram_bot -> {e}')
 
 
 async def handle_event(request):  # function to handle incoming events
     logger.info(f'REQUEST - {request}')
     data = await request.json()
-    
+
     if data['service'] == 'kwork':
         await events.kwork_event_handler(bot, data, USER_ID)
     elif data['service'] == 'kwork_message':
@@ -38,14 +43,17 @@ async def handle_event(request):  # function to handle incoming events
 
 if __name__ == '__main__':
 
-    # Initialize web application
-    app = web.Application()
+    try:
+        # Initialize web application
+        app = web.Application()
 
-    # Add route for handling incoming events
-    app.router.add_post('/event', handle_event)
+        # Add route for handling incoming events
+        app.router.add_post('/event', handle_event)
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    loop.create_task(web._run_app(app, host='0.0.0.0', port=64783))
+        loop = asyncio.get_event_loop()
+        loop.create_task(main())
+        loop.create_task(web._run_app(app, host='0.0.0.0', port=64783))
 
-    loop.run_forever()
+        loop.run_forever()
+    except Exception as e:
+        logger.error(f'Error while trying to start -> {e}')

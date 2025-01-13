@@ -69,7 +69,7 @@ async def main():
         projs_contain_telegram_n_bot = []
         for el in all_projs:
             el['full_text'] = el['title'] + ' ' + el['description']
-            el['created_at'] = datetime.utcnow()
+            el['created_at'] = datetime.now().timestamp()
             if ('telegram' in el['full_text'] or 'tg' in el['full_text'] or 'телеграм' in el['full_text'] or 'тг' in el['full_text']) and \
                     ('бот' in el['full_text'] or 'bot' in el['full_text']):
                 projs_contain_telegram_n_bot.append(el)
@@ -96,12 +96,17 @@ async def main():
             client = MongoClient(os.environ.get('MONGO_URI'))
             db = client['kwork_db']
             collection = db['projects']
-            now = datetime.utcnow()
-            one_minute_ago = now - timedelta(minutes=1)
-            recent_projects = collection.find(
-                {'created_at': {'$gte': one_minute_ago}})
+            now = datetime.now().timestamp()
+            one_minute_ago = (datetime.now() - timedelta(minutes=1)).timestamp()
+            recent_projects = [
+                el for el in collection.find(
+                    {'created_at': {'$gte': one_minute_ago}})
+            ]
+            logger.info(f'Len in recent_porjects -> {len(recent_projects)}')
+            logger.info(f'timestamp -> {now}')
 
             for project in recent_projects:  # send request to aiogram_bot
+                logger.info(f'Smth is going on in recent_projects')
                 project['_id'] = ""
                 project['created_at'] = ""
                 logger.info(f'Sending project to aiogram_bot: {project}')

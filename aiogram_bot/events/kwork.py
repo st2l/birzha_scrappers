@@ -10,13 +10,15 @@ async def kwork_event_handler(bot: Bot, data, user_id):
 Названние: <b>{data['project']['title']}</b>
 Описание: {data['project']['description']}
 Ссылка: {data['project']['project_url']})
-Стоимость: {data['project'].get('price_from', 'некорректно указан параметр')} рублей - {data['project'].get('price_to', 'некорректно указан параметр')} рублей""" \
+Стоимость: {data['project'].get('price', 'некорректно указан параметр')} рублей - {data['project'].get('possible_price_limit', 'некорректно указан параметр')} рублей""" \
 .replace('<br>', '\n')
 
     await bot.send_message(chat_id=user_id, text=message, parse_mode='HTML',
                            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                                [InlineKeyboardButton(
-                                   text="Откликнуться", url=data['project']['project_url'])]
+                                   text="Ссылка на заказ", url=data['project']['project_url'])],
+                                [InlineKeyboardButton(
+                                    text="Отправить отклик!", callback_data=f"send_kwork_connect_{data['project']['id']}")]
                            ]))
 
 

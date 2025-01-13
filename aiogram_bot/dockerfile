@@ -13,9 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Make port 64783 available to the world outside this container
 EXPOSE 64783
 
-# Define environment variable
-ENV TELEGRAM_API_TOKEN=your_telegram_bot_token
-ENV TELEGRAM_USER_ID=your_telegram_user_id
-
 # Run main.py when the container launches
 CMD ["python", "main.py"]
