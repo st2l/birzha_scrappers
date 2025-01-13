@@ -32,16 +32,33 @@ services:
       - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWD}@mongo:27017/
     depends_on:
       - mongo
+  
+  kwork_answer_bot:
+    build:
+      context: ./kwork_answer_bot
+    container_name: kwork_answer_bot
+    working_dir: /app
+    volumes:
+      - ./kwork_answer_bot:/app
+    environment:
+      - LOGIN=${KWORK_LOGIN}
+      - PASSWD=${KWORK_PASSWD}
+      - PHONE_LAST=${KWORK_PHONE_LAST}
+      - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWD}@mongo:27017/
+    depends_on:
+      - mongo
 
   mongo:
     image: mongo:latest
     container_name: mongo
-    command: ["--auth"]
+    command: mongod --quiet --logpath /dev/null --auth
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWD}
     ports:
       - "27017:27017"
+    logging:
+      driver: "none"
 
   mongo-express:
     image: mongo-express:latest

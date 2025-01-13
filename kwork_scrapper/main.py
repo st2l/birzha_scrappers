@@ -120,36 +120,9 @@ async def main():
         await asyncio.sleep(70)
 
 
-async def run_bot():
-    bot = KworkBot(
-        login=os.environ.get('LOGIN'),
-        password=os.environ.get('PASSWD'),
-        phone_last=os.environ.get('PHONE_LAST')
-    )
-
-    @bot.message_handler(on_start=True)
-    async def message_recieved(message: types.Message):
-        try:
-
-            config = await get_configuration_from_mongo()
-            if config['automatic_answers'] is False:
-                url = 'http://aiogram_bot:64783/event'
-                data = {'service': 'kwork_message', 'message': message}
-                requests.post(url, json=data)
-            else:
-                # TODO: write automatic answers
-                return
-
-        except Exception as e:
-            logger.error(f'Error while sending message: {e}')
-
-    await bot.run_bot()
-
-
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     loop.create_task(main())
-    loop.create_task(run_bot())
 
     loop.run_forever()
