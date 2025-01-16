@@ -103,7 +103,7 @@ async def main():
             db = client['kwork_db']
             collection = db['projects']
             now = datetime.now().timestamp()
-            one_minute_ago = (datetime.now() - timedelta(minutes=time_to_wait)).timestamp()
+            one_minute_ago = (datetime.now() - timedelta(minutes=70)).timestamp()
             recent_projects = [
                 el for el in collection.find(
                     {'created_at': {'$gte': one_minute_ago}})
