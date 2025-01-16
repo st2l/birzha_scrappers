@@ -1,6 +1,0 @@
-./pykwork-master.zip
-python-dotenv
-pandas
-pymongo
-loguru
-requests

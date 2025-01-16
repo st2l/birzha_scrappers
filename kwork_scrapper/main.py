@@ -41,14 +41,16 @@ async def get_configuration_from_mongo():
 
 async def main():
 
+    time_to_wait = 60 * 5
     while True:
+        await asyncio.sleep(time_to_wait)
         # -- checking configuration
         config = await get_configuration_from_mongo()
 
         if config['search_on_market'] is False:
             logger.info(
                 'Search on market is disabled. Waiting for a minute...')
-            await asyncio.sleep(70)
+            await asyncio.sleep(time_to_wait)
             continue
         # -- END checking configuration
 
@@ -64,7 +66,11 @@ async def main():
         it_category_id = [el for el in categories if 'IT' in el.name][0].id
         logger.info(f'IT category id: {it_category_id}')
 
-        all_projs = await api.get_projects(categories_ids=[it_category_id])
+        try:
+            all_projs = await api.get_projects(categories_ids=[it_category_id])
+        except Exception as e:
+            logger.error(f'Error in fetching all_projs -> {e}')
+            continue
 
         projs_contain_telegram_n_bot = []
         for el in all_projs:
@@ -97,7 +103,7 @@ async def main():
             db = client['kwork_db']
             collection = db['projects']
             now = datetime.now().timestamp()
-            one_minute_ago = (datetime.now() - timedelta(minutes=1)).timestamp()
+            one_minute_ago = (datetime.now() - timedelta(minutes=time_to_wait)).timestamp()
             recent_projects = [
                 el for el in collection.find(
                     {'created_at': {'$gte': one_minute_ago}})
@@ -120,9 +126,8 @@ async def main():
         except Exception as e:
             logger.error(f'Error while getting from mongo db: {e}')
         # -- END getting last projects from mongo db
-
+    
         logger.info(f'All data were added to database. Waiting for a minute...')
-        await asyncio.sleep(70)
 
 
 if __name__ == "__main__":
